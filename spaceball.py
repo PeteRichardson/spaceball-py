@@ -27,16 +27,19 @@ def replchars_to_hex(match):
 
 with serial.Serial(timeout=None) as ser:
     #ser.baudrate = 9600
-    ser.port = '/dev/cu.usbserial-A403JWZ2'
+    ser.port = '/dev/tty.USA19QW1P1.1'
     ser.open()
     ser.reset_input_buffer()
     config_ball(ser)
     while True:
         c = ser.read()
-        #brep = replchars.sub(replchars_to_hex, c)
-        #brep = "{:02x}".format(ord(c))
-        brep = "{:08b}".format(ord(c))
-        print brep,
-        if c == "\x00":
+        if c in ['K','D', '\x0D']:
+        	print c,
+        else:
+	        #brep = replchars.sub(replchars_to_hex, c)
+	        brep = "{:02x}".format(ord(c))
+	        #brep = "{:08b}".format(ord(c))
+	        print brep,
+        if c == "\x0D":
             print
             
