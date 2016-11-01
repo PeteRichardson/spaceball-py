@@ -1,0 +1,230 @@
+Appendix C: Spaceball Protocol
+
+GENERAL COMMUNICATIONS INFORMATION
+
+The Spaceball communicates through an RS-232C communications port at 9600 baud
+with no parity, 8 data bits and 1 stop bit.
+
+Spaceball accepts and produces data packets that start with an initial printable
+multiplexing byte and end with a Carriage Return (ASCII 015 octal).  Trailing Line
+Feeds (ASCII 012 octal) sent to Spaceball are ignored.
+
+In general, packets that are being sent to Spaceball that start with lower case
+characters indicate that data is being requested from Spaceball's microcontroller's
+memory; upper case characters indicate that data is being set in Spaceball's memory.
+
+Packets coming from Spaceball all start with upper case characters.
+
+A packet that starts with a lower case character (a request for information) will
+result in a response that starts with the same character, only upper case.
+
+Multi-byte data is sent and produced in 16 bit 2's complement numbers, high byte first.
+
+Since some packets include data, chances are some of these bytes will be unprintable
+(e.g. high bit set).  Spaceball normally communicates in "binary" mode wherein these
+bytes are sent through unchanged (the four exceptions will be described later).  It
+is highly recommended that this mode be used as it is more efficient and it makes 
+parsing much easier.  If for any reason binary communications can not be used, 
+Spaceball can be put into a "printable" mode wherein the data is packed into the 
+least significant 6 bits of each byte.  
+
+PARSING DETAILS
+
+In binary mode, there are 4 special characters that must be watched for. If XON,
+XOFF, CR, or "^" appears in the data part of a packet, it is replaced by a two 
+character sequence to distinguish it from the real control code, as follows:
+
+Actual Two Byte Sequence Received	Interpret as a Single Data Byte
+
+"^Q"					021 octal  (XON)
+"^S"					023 octal  (XOFF)
+"^M"					015 octal  (CR)
+"^^"					036 octal  ("^")
+
+Therefore, you should respond to a real XOFF by ceasing to send data until you
+receive an XON.  Interpret all CRs as end of packet (your serial port lost some
+characters if you got one when you did not expect it).  You should never receive
+a "^" by itself. 
+
+Beware, some line disciplines have problems with always translating "^V"s and
+collapsing multiple "\"s.
+
+POWER ON PROCESSING
+
+When Spaceball powers up, it sends lines similar to the following to the host:
+
+@1 Spaceball alive and well after a poweron reset.
+@2 Firmware version 2.02 created on 11-Jun-1991.
+
+After every power-on, the Spaceball must be configured.  These bytes should be
+sent from the host (#... are my comments, do not send them):
+
+\015			# Clear the line
+CB\015			# Communications Mode Set to Binary
+NT\015FT?\015FR?\015	# Set Null Region and Trans and Rot Sensitivity
+P@r@r\015		# Data rate to 20 events per Second
+MSSV\015		# Ball Event Type: Trans and Rot Vectors
+Z\015			# Rezero the ball
+BcCc\015		# Beep it
+
+OUTPUT EVENTS
+
+Spaceball produces two types of output:
+
+o Key Press and Release Events
+o Ball Displacement Events
+
+Anytime a key is pressed or released a "K" packet is sent from the Spaceball 
+that indicates the new state of the nine buttons (eight buttons labelled 1-8 
+and the pick button which is under the skin on the far side of the ball).  In
+the two bytes between the "K" and the <cr> a 1 bit indicates the button is 
+pressed, a 0 bit indicates a button is not pressed. The packet is layed out
+as follows:
+
+K  010<pick button state><b8><b7><b6><b5>  0100<b4><b3><b2><b1>  \015
+
+(The spaces indicated are only for readability.  There are no spaces in packets
+unless the binary data happens to correspond to a SPACE character.)
+
+When the ball is untouched, it is considered to be at "rest" and does not generate
+any ball displacement events.  When the ball is moved, a "D" motion data packet is
+sent.  The bytes between the "D" and the <cr> contain the Period followed by the
+6 DOF data.  The Period is an unsigned 16 bit number indicating the amount of time,
+in 1/16ths of a millisecond, since Spaceball last sent a "D" packet.  The Period is
+intended for integration with the 6 DOF data that follows.  The 6 DOF data is returned
+in signed 16 bit 2's complement integers, translation vector first, then rotation
+vector.  The packet is layed out as follows:
+
+D <period> <delta translation vector> <delta rotation vector> \015
+
+MISCELLANEOUS PACKETS
+
+If the packets suggested above in the POWER ON PROCESSING are sent to the Spaceball,
+the K and D packets are the only packets ever encountered.  The B and possibly Z 
+packets (see below) are the only ones ever sent to the Spaceball by applications
+during normal use.
+
+There are a few other packets that may be of use.  These are detailed below. Note, all
+packets must be terminated with a <cr>.
+
+@RESET - Software reset.  Spaceball must be completely reinitialized after this is sent.
+         Spaceball responds with:
+
+@1 Spaceball alive and well after a software reset.
+@2 Firmware version 2.02 created on 11-Jun-1991.
+
+Anytime a @1 is received, Spaceball must be completely reinitialized.  This 
+will also happen when power is applied.
+
+H - Help packet.  Spaceball responds with a list of commands it understands.
+    This is typical output:
+
+HPackets:
+
+H'%[?]'	-	echoed
+H'@RESET'
+H'B<? beep notes>'
+H'C<1 mode(B|b|P|p)>[1 xoff timeout]'
+H'F(T|R|B)<1 feel>
+H'h' 'help' 'HELP'
+H'hv'
+H'k'
+H'M<1 tran mode>[1 rot mode][1 rot format][1 handedness][A]'
+H'M<N|S|X>[N|S|X][V|X][L|R|X][A]'
+H'N<1 null region>'
+H'P<2 max pulse period><2 min pulse period>'
+H'Z' - zero ball'
+
+B<string> - Causes the Beeper to emit a sequence of tones and pauses. Each 
+            lower case character [a-z] results in a tone; each upper case 
+            character [A-Z] results in a pause.
+
+B - asks for the balance of the string (if any) that is still playing.
+
+CB - set Communication mode to Binary
+
+CP - set Communication mode to Printable
+
+c - request current Communication mode
+
+MSSV - sets the ball Mode.  Until this packet is sent, movement of the ball will
+       NOT produce any output.
+
+M - requests current ball mode
+
+D(+14bytes)-  a ball motion data packet as described above.
+
+D - requests that a motion data packet be sent immediately instead of waiting for
+    the max pulse rate timer to timeout.
+
+K<value> - Key status.
+
+K - request current key status.
+
+P<max><min> - Sets MAX and MIN data pulse rates.  Spaceball has two timers running
+              on its microcontroller.  Spaceball will never send "D" motion data
+              packets before the min timer expires (by default this is 40 milliseconds)
+              and will definitely send a "D" packet after the max timer expires (by
+              default this is 1500 milliseconds).  Spaceball will never send a "D" 
+              packet if the ball has been at rest since the last "D" packet was sent.  
+
+To request a "D" packet in the time between the min and max timeouts, send a "d"
+packet.  This allows you keep the serial data traffic to a minimum by only
+asking for data when you are ready to process it.  You should ask for further data
+just before you start redrawing the geometry.  This gives plenty of time for the 
+characters to go to and	from the Spaceball. You can force a constant data rate by
+selecting equal values for min and max.  This is what is setup if you send the 
+packets suggested in the POWER ON PROCESSING section above.
+
+P - request current min and max pulse rate timer values
+
+FT<value> - sets Translation Feel. "?" is a cubic response.
+
+FR<value> - sets Rotation Feel. "?" is a cubic response.
+
+F - request current Translation and Rotation Feel setting
+
+N<value> - sets null region.  The null region represents the values of the 6 axes,
+           near zero, that are to be ignored.  The smaller the value, the less 
+           force/torque that will be required before sensing begins.
+
+N - requests the current null region value.
+
+Z - ReZero the ball.  This sets the current ball position as the "rest" position.
+    Movement away from this position will cause "D" motion data packets to be 
+    produced.  You can setup and eliminate drift by sending this packet.
+
+HARDWARE DETAILS
+
+Spaceball 1003 has circuitry that holds CTS line asserted unless it detects any
+voltage coming from the host.  If it detects any voltage, it obeys that signal.
+The host had better assert CTS at sometime if it expects SB to talk to it.
+
+Spaceball only complains about CTS if it is deasserted right after a hardware or
+software RESET, otherwise it obeys the assertion/deassertion of CTS (during normal
+opertions).  If it detects that CTS is deasserted after reset, it beeps CTS in morse
+code:  dah-dit-dah-dit dah dit-dit-dit.
+
+Spaceball Model 1003 9 pin connector:
+
+1-no connect	2-TX	3-RX	4-RTS (asserted by SB)	5-CTS	6-power
+7-signal ground	8-+power	9-DTR
+
+Male power supplies must be tip positive 9V DC, ~350 mA.
+
+Spaceball 1003 25 pin cables deliver power on pins: 17 power, 15 power_ground.
+These connectors are found on very old Spaceballs.
+
+Spaceball 2003 rear female connector pinouts are:
+
+         -------        8 - no connect
+        /       \       7 - +7-15V DC
+       /  8 7 6  \      6 - Spaceball Receive Data
+      /           \     5 - Spaceball Transmit Data
+      | 5   4   3 |     4 - no connect
+      \           /     3 - no connect
+       \  2   1  /      2 - Power Ground 
+	\       /       1 - Signal Ground 
+         -------
+
+Note that Spaceball sends data on TX and receives data on RX.
