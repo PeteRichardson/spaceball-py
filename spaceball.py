@@ -30,18 +30,20 @@ class SpaceBallEvent:
         pass
 
 class SpaceBallButtonEvent (SpaceBallEvent):
+    last_button_data = [0x40, 0x40]
+
     def __init__(self, data):
         SpaceBallEvent.__init__(self, 'K', data)
 
     def __str__(self):
-        print "Key Event! ",
+        print "Button Event! prev data = 0x{:02x} 0x{:02x}...".format(SpaceBallButtonEvent.last_button_data[0], SpaceBallButtonEvent.last_button_data[1]),
         return SpaceBallEvent.__str__(self)
 
     def run(self, handlers):
         if self.data[0] & 0x1F:    # check pick button and buttons 5-8
-            if (self.data[0] & 0x10):
+            if (self.data[0] & 0x10 and not (SpaceBallButtonEvent.last_button_data[0] & 0x10)):
                 handlers["pick_button_up"](self)
-            if (self.data[0] & 0x01):
+            if (self.data[0] & 0x01 and not (SpaceBallButtonEvent.last_button_data[0] & 0x01)):
                 handlers["5_button_up"](self)
             if (self.data[0] & 0x02):
                 handlers["6_button_up"](self)
@@ -59,6 +61,8 @@ class SpaceBallButtonEvent (SpaceBallEvent):
                 handlers["3_button_up"](self)
             if (self.data[0] & 0x08):
                 handlers["4_button_up"](self)
+
+        last_button_data = self.data
 
 
 class SpaceBallDataEvent (SpaceBallEvent):
