@@ -1,45 +1,42 @@
 import serial
 import re
 
-def config_ball(ser):
-    """
-    \015            # Clear the line
-    CB\015          # Communications Mode Set to Binary
-    NT\015FT?\015FR?\015    # Set Null Region and Trans and Rot Sensitivity
-    P@r@r\015       # Data rate to 20 events per Second
-    MSSV\015        # Ball Event Type: Trans and Rot Vectors
-    Z\015           # Rezero the ball
-    BcCc\015        # Beep it
-    """
-    ser.write("\015")
-    ser.write("CB\015")
-    ser.write("NT\015FT?\015FR?\015")
-    ser.write("P@r@r\015")
-    ser.write("MSSV\015")
-    ser.write("Z\015")
-    ser.write("BcCc\015")
-    ser.write("H")
+class SpaceBall:
+    def __init__(self, tty='/dev/tty.USA19QW1P1.1'):
+        self.tty = tty
+        self.ser = serial.Serial(timeout=None)
+        self.ser.baudrate = 9600
+        self.ser.port = self.tty
+        self.ser.open()
+        self.ser.reset_input_buffer()
 
-replchars = re.compile('([^ -~])')
-def replchars_to_hex(match):
-    return r'\x{0:02x}'.format(ord(match.group()))
+        config_data = [
+            "\x0D",                 # Clear the line
+            "CB\x0D",               # Communications Mode Set to Binary
+            "NT\x0DFT?\x0DFR?\x0D", # Set Null Region and Trans and Rot Sensitivity
+            "P@r@r\x0D",            # Data rate to 20 events per Second
+            "MSSV\x0D",             # Ball Event Type: Trans and Rot Vectors
+            "Z\x0D",                # Rezero the ball
+            "BcCc\x0D",             # Beep it
+            "H"
+        ]
+        for msg in config_data:
+            self.ser.write(msg)
+
+    def read(self):
+        return self.ser.read()
 
 
-with serial.Serial(timeout=None) as ser:
-    #ser.baudrate = 9600
-    ser.port = '/dev/tty.USA19QW1P1.1'
-    ser.open()
-    ser.reset_input_buffer()
-    config_ball(ser)
-    while True:
-        c = ser.read()
-        if c in ['K','D', '\x0D']:
-        	print c,
-        else:
-	        #brep = replchars.sub(replchars_to_hex, c)
-	        brep = "{:02x}".format(ord(c))
-	        #brep = "{:08b}".format(ord(c))
-	        print brep,
-        if c == "\x0D":
-            print
+ball = SpaceBall()
+while True:
+    c = ball.read()
+    if c in ['K','D', '\x0D']:
+    	print c,
+    else:
+        #brep = replchars.sub(replchars_to_hex, c)
+        brep = "{:02x}".format(ord(c))
+        #brep = "{:08b}".format(ord(c))
+        print brep,
+    if c == "\x0D":
+        print
             
