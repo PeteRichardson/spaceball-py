@@ -110,6 +110,12 @@ class SpaceBall:
             ], lambda e: None
         )
 
+    def handler_for(self, event):
+        def gethandler(f):
+            self.handlers[event] = f
+            return f
+        return gethandler
+
     def read_event(self):
         type = self.ser.read()
         data = []
