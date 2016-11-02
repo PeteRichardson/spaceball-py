@@ -1,6 +1,22 @@
 import serial
 import re
 
+class SpaceBallDataEvent:
+    def __init__(self, type, data):
+        self.type = type
+        self.data = data
+
+    def __str__(self):
+        result = ""
+        if self.type in ['K','D']:
+            result += self.type
+        else:
+            result += "{:02x}".format(ord(self.type))
+            #brep = "{:08b}".format(ord(c))
+        for c in self.data:
+            result += " {:02x}".format(ord(c))
+        return result
+
 class SpaceBall:
     def __init__(self, tty='/dev/tty.USA19QW1P1.1'):
         self.tty = tty
@@ -26,17 +42,17 @@ class SpaceBall:
     def read(self):
         return self.ser.read()
 
+    def read_event(self):
+        type = self.read()
+        data = []
+        c = self.read()
+        while c != '\x0D':
+            data.append(c)
+            c = self.read()
+        result = SpaceBallDataEvent(type, data)
+        return result
 
-ball = SpaceBall()
-while True:
-    c = ball.read()
-    if c in ['K','D', '\x0D']:
-    	print c,
-    else:
-        #brep = replchars.sub(replchars_to_hex, c)
-        brep = "{:02x}".format(ord(c))
-        #brep = "{:08b}".format(ord(c))
-        print brep,
-    if c == "\x0D":
-        print
+
+
+
             
