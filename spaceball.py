@@ -9,7 +9,7 @@ class SpaceBallEvent:
     @classmethod
     def create(cls, type, data):
         if type == 'K':
-            return SpaceBallButtonEvent(data)
+            return SpaceBallKeyEvent(data)
         elif type == 'D':
             return SpaceBallDataEvent(data)
         else:
@@ -29,40 +29,82 @@ class SpaceBallEvent:
     def run(self, handlers):
         pass
 
-class SpaceBallButtonEvent (SpaceBallEvent):
-    last_button_data = [0x40, 0x40]
+class SpaceBallKeyEvent (SpaceBallEvent):
+    last_key_data = [0x40, 0x40]
 
     def __init__(self, data):
         SpaceBallEvent.__init__(self, 'K', data)
 
+        self.key_pick_down = (self.data[0] & 0x10) & ~ (SpaceBallKeyEvent.last_key_data[0] & 0x10)
+        self.key_1_down = (self.data[1] & 0x01) & ~ (SpaceBallKeyEvent.last_key_data[1] & 0x01)
+        self.key_2_down = (self.data[1] & 0x02) & ~ (SpaceBallKeyEvent.last_key_data[1] & 0x02)
+        self.key_3_down = (self.data[1] & 0x04) & ~ (SpaceBallKeyEvent.last_key_data[1] & 0x04)
+        self.key_4_down = (self.data[1] & 0x08) & ~ (SpaceBallKeyEvent.last_key_data[1] & 0x08)
+        self.key_5_down = (self.data[0] & 0x01) & ~ (SpaceBallKeyEvent.last_key_data[0] & 0x01)
+        self.key_6_down = (self.data[0] & 0x02) & ~ (SpaceBallKeyEvent.last_key_data[0] & 0x02)
+        self.key_7_down = (self.data[0] & 0x04) & ~ (SpaceBallKeyEvent.last_key_data[0] & 0x04)
+        self.key_8_down = (self.data[0] & 0x08) & ~ (SpaceBallKeyEvent.last_key_data[0] & 0x08)
+
+        self.key_pick_up = ~ (self.data[0] & 0x10) & (SpaceBallKeyEvent.last_key_data[0] & 0x10)
+        self.key_1_up = ~ (self.data[1] & 0x01) & (SpaceBallKeyEvent.last_key_data[1] & 0x01)
+        self.key_2_up = ~ (self.data[1] & 0x02) & (SpaceBallKeyEvent.last_key_data[1] & 0x02)
+        self.key_3_up = ~ (self.data[1] & 0x04) & (SpaceBallKeyEvent.last_key_data[1] & 0x04)
+        self.key_4_up = ~ (self.data[1] & 0x08) & (SpaceBallKeyEvent.last_key_data[1] & 0x08)
+        self.key_5_up = ~ (self.data[0] & 0x01) & (SpaceBallKeyEvent.last_key_data[0] & 0x01)
+        self.key_6_up = ~ (self.data[0] & 0x02) & (SpaceBallKeyEvent.last_key_data[0] & 0x02)
+        self.key_7_up = ~ (self.data[0] & 0x04) & (SpaceBallKeyEvent.last_key_data[0] & 0x04)
+        self.key_8_up = ~ (self.data[0] & 0x08) & (SpaceBallKeyEvent.last_key_data[0] & 0x08)
+
     def __str__(self):
-        print "Button Event! prev data = 0x{:02x} 0x{:02x}...".format(SpaceBallButtonEvent.last_button_data[0], SpaceBallButtonEvent.last_button_data[1]),
-        return SpaceBallEvent.__str__(self)
+       return SpaceBallEvent.__str__(self)
 
     def run(self, handlers):
-        if self.data[0] & 0x1F:    # check pick button and buttons 5-8
-            if (self.data[0] & 0x10 and not (SpaceBallButtonEvent.last_button_data[0] & 0x10)):
-                handlers["pick_button_up"](self)
-            if (self.data[0] & 0x01 and not (SpaceBallButtonEvent.last_button_data[0] & 0x01)):
-                handlers["5_button_up"](self)
-            if (self.data[0] & 0x02):
-                handlers["6_button_up"](self)
-            if (self.data[0] & 0x04):
-                handlers["7_button_up"](self)
-            if (self.data[0] & 0x08):
-                handlers["8_button_up"](self)
+        if self.key_pick_up:
+            handlers["key_pick_up"](self)
+        elif self.key_pick_down:
+            handlers["key_pick_down"](self)
 
-        if self.data[1] & 0x0F:    # check buttons 1-4
-            if (self.data[1] & 0x01):
-                handlers["1_button_up"](self)
-            if (self.data[1] & 0x02):
-                handlers["2_button_up"](self)
-            if (self.data[1] & 0x04):
-                handlers["3_button_up"](self)
-            if (self.data[1] & 0x08):
-                handlers["4_button_up"](self)
+        if self.key_1_up:
+            handlers["key_1_up"](self)
+        elif self.key_1_down:
+            handlers["key_1_down"](self)
 
-        last_button_data = self.data
+        if self.key_2_up:
+            handlers["key_2_up"](self)
+        elif self.key_2_down:
+            handlers["key_2_down"](self)
+
+        if self.key_3_up:
+            handlers["key_3_up"](self)
+        elif self.key_3_down:
+            handlers["key_3_down"](self)
+
+        if self.key_4_up:
+            handlers["key_4_up"](self)
+        elif self.key_4_down:
+            handlers["key_4_down"](self)
+
+        if self.key_5_up:
+            handlers["key_5_up"](self)
+        elif self.key_5_down:
+            handlers["key_5_down"](self)
+
+        if self.key_6_up:
+            handlers["key_6_up"](self)
+        elif self.key_6_down:
+            handlers["key_6_down"](self)
+
+        if self.key_7_up:
+            handlers["key_7_up"](self)
+        elif self.key_7_down:
+            handlers["key_7_down"](self)
+
+        if self.key_8_up:
+            handlers["key_8_up"](self)
+        elif self.key_8_down:
+            handlers["key_8_down"](self)
+
+        SpaceBallKeyEvent.last_key_data = self.data
 
 def twos_comp(val, bits):
     """compute the 2's compliment of int value val"""
@@ -119,15 +161,24 @@ class SpaceBall:
             self.ser.write(msg)
 
         self.handlers = dict.fromkeys([
-            'pick_button_up',
-            '1_button_up',
-            '2_button_up',
-            '3_button_up',
-            '4_button_up',
-            '5_button_up',
-            '6_button_up',
-            '7_button_up',
-            '8_button_up',
+            'key_pick_up',
+            'key_1_up',
+            'key_2_up',
+            'key_3_up',
+            'key_4_up',
+            'key_5_up',
+            'key_6_up',
+            'key_7_up',
+            'key_8_up',
+            'key_pick_down',
+            'key_1_down',
+            'key_2_down',
+            'key_3_down',
+            'key_4_down',
+            'key_5_down',
+            'key_6_down',
+            'key_7_down',
+            'key_8_down',
             'data'
             ], lambda e: None
         )
