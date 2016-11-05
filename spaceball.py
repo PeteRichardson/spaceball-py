@@ -68,10 +68,22 @@ class SpaceBallButtonEvent (SpaceBallEvent):
 class SpaceBallDataEvent (SpaceBallEvent):
     def __init__(self, data):
         SpaceBallEvent.__init__(self, 'D', data)
+        self.period = (self.data[0] * 256 + self.data[1]) / 16.0
+        self.Tx = self.data[ 2] * 256 + self.data[ 3]
+        self.Ty = self.data[ 4] * 256 + self.data[ 5]
+        self.Tz = self.data[ 6] * 256 + self.data[ 7]
+
+        self.Rx = self.data[ 8] * 256 + self.data[ 9]
+        self.Ry = self.data[10] * 256 + self.data[11]
+        self.Rz = self.data[12] * 256 + self.data[13]
+
 
     def __str__(self):
-        print "Data Event! ",
-        return SpaceBallEvent.__str__(self)
+        msg = "Data: "
+        msg += "{:5.3f} ms, ".format(self.period)
+        msg += "Tr {:5d},{:5d},{:5d} - ".format(self.Tx, self.Ty, self.Tz)
+        msg += "Ro {:5d},{:5d},{:5d}".format(self.Rx, self.Ry, self.Rz)
+        return msg
 
     def run(self, handlers):
         handlers["data"](self)
