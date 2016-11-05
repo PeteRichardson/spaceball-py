@@ -57,32 +57,38 @@ class SpaceBallButtonEvent (SpaceBallEvent):
                 handlers["1_button_up"](self)
             if (self.data[1] & 0x02):
                 handlers["2_button_up"](self)
-            if (self.data[0] & 0x04):
+            if (self.data[1] & 0x04):
                 handlers["3_button_up"](self)
-            if (self.data[0] & 0x08):
+            if (self.data[1] & 0x08):
                 handlers["4_button_up"](self)
 
         last_button_data = self.data
+
+def twos_comp(val, bits):
+    """compute the 2's compliment of int value val"""
+    if (val & (1 << (bits - 1))) != 0: # if sign bit is set e.g., 8bit: 128-255
+        val = val - (1 << bits)        # compute negative value
+    return val                         # return positive value as is
 
 
 class SpaceBallDataEvent (SpaceBallEvent):
     def __init__(self, data):
         SpaceBallEvent.__init__(self, 'D', data)
         self.period = (self.data[0] * 256 + self.data[1]) / 16.0
-        self.Tx = self.data[ 2] * 256 + self.data[ 3]
-        self.Ty = self.data[ 4] * 256 + self.data[ 5]
-        self.Tz = self.data[ 6] * 256 + self.data[ 7]
+        self.Tx = twos_comp(self.data[ 2] * 256 + self.data[ 3],16)
+        self.Ty = twos_comp(self.data[ 4] * 256 + self.data[ 5],16)
+        self.Tz = twos_comp(self.data[ 6] * 256 + self.data[ 7],16)
 
-        self.Rx = self.data[ 8] * 256 + self.data[ 9]
-        self.Ry = self.data[10] * 256 + self.data[11]
-        self.Rz = self.data[12] * 256 + self.data[13]
+        self.Rx = twos_comp(self.data[ 8] * 256 + self.data[ 9],16)
+        self.Ry = twos_comp(self.data[10] * 256 + self.data[11],16)
+        self.Rz = twos_comp(self.data[12] * 256 + self.data[13],16)
 
 
     def __str__(self):
-        msg = "Data: "
-        msg += "{:5.3f} ms, ".format(self.period)
-        msg += "Tr {:5d},{:5d},{:5d} - ".format(self.Tx, self.Ty, self.Tz)
-        msg += "Ro {:5d},{:5d},{:5d}".format(self.Rx, self.Ry, self.Rz)
+        msg = "D,"
+        msg += "{:6.3f},".format(self.period)
+        msg += "{:6d},{:6d},{:6d},".format(self.Tx, self.Ty, self.Tz)
+        msg += "{:6d},{:6d},{:6d}".format(self.Rx, self.Ry, self.Rz)
         return msg
 
     def run(self, handlers):
