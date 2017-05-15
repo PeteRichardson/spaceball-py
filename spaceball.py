@@ -1,5 +1,4 @@
 import serial
-import re
 
 class SpaceBallEvent:
     def __init__(self, type, data):
@@ -17,7 +16,7 @@ class SpaceBallEvent:
 
     def __str__(self):
         result = ""
-        if self.type in ['K','D']:
+        if self.type in ['K', 'D']:
             result += self.type
         else:
             result += "{:02x}".format(ord(self.type))
@@ -29,7 +28,7 @@ class SpaceBallEvent:
     def run(self, handlers):
         pass
 
-class SpaceBallKeyEvent (SpaceBallEvent):
+class SpaceBallKeyEvent(SpaceBallEvent):
     last_key_data = [0x40, 0x40]
 
     def __init__(self, data):
@@ -117,20 +116,19 @@ class SpaceBallDataEvent (SpaceBallEvent):
     def __init__(self, data):
         SpaceBallEvent.__init__(self, 'D', data)
         self.period = (self.data[0] * 256 + self.data[1]) / 16.0
-        self.Tx = twos_comp(self.data[ 2] * 256 + self.data[ 3],16)
-        self.Ty = twos_comp(self.data[ 4] * 256 + self.data[ 5],16)
-        self.Tz = twos_comp(self.data[ 6] * 256 + self.data[ 7],16)
-
-        self.Rx = twos_comp(self.data[ 8] * 256 + self.data[ 9],16)
-        self.Ry = twos_comp(self.data[10] * 256 + self.data[11],16)
-        self.Rz = twos_comp(self.data[12] * 256 + self.data[13],16)
+        self.Tx = twos_comp(self.data[ 2] * 256 + self.data[ 3], 16)
+        self.Ty = twos_comp(self.data[ 4] * 256 + self.data[ 5], 16)
+        self.Tz = twos_comp(self.data[ 6] * 256 + self.data[ 7], 16)
+        self.Rx = twos_comp(self.data[ 8] * 256 + self.data[ 9], 16)
+        self.Ry = twos_comp(self.data[10] * 256 + self.data[11], 16)
+        self.Rz = twos_comp(self.data[12] * 256 + self.data[13], 16)
 
 
     def __str__(self):
         msg = "D,"
         msg += "{:6.3f},".format(self.period)
-        msg += "{:6d},{:6d},{:6d},".format(self.Tx, self.Ty, self.Tz)
-        msg += "{:6d},{:6d},{:6d}".format(self.Rx, self.Ry, self.Rz)
+        msg += "{:d},{:d},{:d},".format(self.Tx, self.Ty, self.Tz)
+        msg += "{:d},{:d},{:d}".format(self.Rx, self.Ry, self.Rz)
         return msg
 
     def run(self, handlers):
@@ -139,14 +137,14 @@ class SpaceBallDataEvent (SpaceBallEvent):
 
 class SpaceBall:
 
-    def __init__(self, tty='/dev/tty.USA19QW1P1.1'):
+    def __init__(self, tty='/dev/tty.usbserial-AK05DLON'):
         self.tty = tty
         self.ser = serial.Serial(timeout=None)
         self.ser.baudrate = 9600
         self.ser.port = self.tty
         self.ser.open()
         self.ser.reset_input_buffer()
-
+        
         config_data = [
             "\x0D",                 # Clear the line
             "CB\x0D",               # Communications Mode Set to Binary
