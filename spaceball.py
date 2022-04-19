@@ -7,16 +7,16 @@ class SpaceBallEvent:
 
     @classmethod
     def create(cls, type, data):
-        if type == 'K':
+        if type == b'K':
             return SpaceBallKeyEvent(data)
-        elif type == 'D':
+        elif type == b'D':
             return SpaceBallDataEvent(data)
         else:
             return SpaceBallEvent(type, data)
 
     def __str__(self):
         result = ""
-        if self.type in ['K', 'D']:
+        if self.type in [b'K', b'D']:
             result += self.type
         else:
             result += "{:02x}".format(ord(self.type))
@@ -54,8 +54,21 @@ class SpaceBallKeyEvent(SpaceBallEvent):
         self.key_7_up = ~ (self.data[0] & 0x04) & (SpaceBallKeyEvent.last_key_data[0] & 0x04)
         self.key_8_up = ~ (self.data[0] & 0x08) & (SpaceBallKeyEvent.last_key_data[0] & 0x08)
 
+    # def __str__(self):
+    #    return SpaceBallEvent.__str__(self)
     def __str__(self):
-       return SpaceBallEvent.__str__(self)
+        msg = "K,"
+        msg += "P" if self.key_pick_down else "_"
+        msg += "1" if self.key_1_down else "_"
+        msg += "2" if self.key_2_down else "_"
+        msg += "3" if self.key_3_down else "_"
+        msg += "4" if self.key_4_down else "_"
+        msg += "5" if self.key_5_down else "_"
+        msg += "6" if self.key_6_down else "_"
+        msg += "7" if self.key_7_down else "_"
+        msg += "8" if self.key_8_down else "_"
+        return msg
+
 
     def run(self, handlers):
         if self.key_pick_up:
@@ -137,7 +150,7 @@ class SpaceBallDataEvent (SpaceBallEvent):
 
 class SpaceBall:
 
-    def __init__(self, tty='/dev/tty.usbserial-AK05DLON'):
+    def __init__(self, tty='/dev/tty.usbserial-AJ03ACPV'):
         self.tty = tty
         self.ser = serial.Serial(timeout=None)
         self.ser.baudrate = 9600
@@ -156,7 +169,8 @@ class SpaceBall:
             "H"
         ]
         for msg in config_data:
-            self.ser.write(msg)
+            self.ser.write(msg.encode())
+            #print(msg)
 
         self.handlers = dict.fromkeys([
             'key_pick_up',
@@ -191,7 +205,7 @@ class SpaceBall:
         type = self.ser.read()
         data = []
         c = self.ser.read()
-        while c != '\x0D':
+        while ord(c) != 13:
             data.append(ord(c))
             c = self.ser.read()
         result = SpaceBallEvent.create(type, data)

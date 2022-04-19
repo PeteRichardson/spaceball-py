@@ -23,7 +23,7 @@ class Line(object):
                 self.x = 0
 
     def __str__(self):
-        return " "*self.x + "*"
+        return " "*int(self.x) + "*"
 
 ball = SpaceBall()
 
@@ -37,6 +37,6 @@ line = Line(width=int(columns)-1)
 
 while True:
     ball.update()
-    print line
+    print (line)
 
 
