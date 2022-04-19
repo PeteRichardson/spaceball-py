@@ -1,4 +1,4 @@
-from spaceball import SpaceBall
+from spaceball import Spaceball
 import sys
 import subprocess 
 
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     rows, columns = subprocess.check_output(['stty', 'size']).decode().split()
     line = Line(width=int(columns)-1)
 
-    ball = SpaceBall(tty='/dev/tty.usbserial-AJ03ACPV')
+    ball = Spaceball(tty='/dev/tty.usbserial-AJ03ACPV')
 
     # Register a handler to update the Line whenever displacement data comes in.
     @ball.handler_for('data')

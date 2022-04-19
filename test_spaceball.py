@@ -1,7 +1,7 @@
-from spaceball import SpaceBall
+from spaceball import Spaceball
 
 # Pass in the serial port the Spaceball is connected to
-ball = SpaceBall(tty='/dev/tty.usbserial-AJ03ACPV')
+ball = Spaceball(tty='/dev/tty.usbserial-AJ03ACPV')
 
 # Register a simple handler for all the keydown events
 # and the data (i.e. displacement) event.

@@ -13,7 +13,7 @@
 
 import serial
 
-class SpaceBallEvent:
+class SpaceballEvent:
     ''' Base class for any events the Spaceball can send.
         Made up of a data type and some bytes of data.
         Subclasses include key events and data (i.e. ball movement) events
@@ -25,11 +25,11 @@ class SpaceBallEvent:
     @classmethod
     def create(cls, type, data):
         if type == b'K':
-            return SpaceBallKeyEvent(data)
+            return SpaceballKeyEvent(data)
         elif type == b'D':
-            return SpaceBallDataEvent(data)
+            return SpaceballDataEvent(data)
         else:
-            return SpaceBallEvent(type, data)
+            return SpaceballEvent(type, data)
 
     def __str__(self):
         result = ""
@@ -46,31 +46,31 @@ class SpaceBallEvent:
         pass
 
 
-class SpaceBallKeyEvent(SpaceBallEvent):
+class SpaceballKeyEvent(SpaceballEvent):
     last_key_data = [0x40, 0x40]
 
     def __init__(self, data):
-        SpaceBallEvent.__init__(self, 'K', data)
+        SpaceballEvent.__init__(self, 'K', data)
 
-        self.key_pick_down = (self.data[0] & 0x10) & ~ (SpaceBallKeyEvent.last_key_data[0] & 0x10)
-        self.key_1_down = (self.data[1] & 0x01) & ~ (SpaceBallKeyEvent.last_key_data[1] & 0x01)
-        self.key_2_down = (self.data[1] & 0x02) & ~ (SpaceBallKeyEvent.last_key_data[1] & 0x02)
-        self.key_3_down = (self.data[1] & 0x04) & ~ (SpaceBallKeyEvent.last_key_data[1] & 0x04)
-        self.key_4_down = (self.data[1] & 0x08) & ~ (SpaceBallKeyEvent.last_key_data[1] & 0x08)
-        self.key_5_down = (self.data[0] & 0x01) & ~ (SpaceBallKeyEvent.last_key_data[0] & 0x01)
-        self.key_6_down = (self.data[0] & 0x02) & ~ (SpaceBallKeyEvent.last_key_data[0] & 0x02)
-        self.key_7_down = (self.data[0] & 0x04) & ~ (SpaceBallKeyEvent.last_key_data[0] & 0x04)
-        self.key_8_down = (self.data[0] & 0x08) & ~ (SpaceBallKeyEvent.last_key_data[0] & 0x08)
+        self.key_pick_down = (self.data[0] & 0x10) & ~ (SpaceballKeyEvent.last_key_data[0] & 0x10)
+        self.key_1_down = (self.data[1] & 0x01) & ~ (SpaceballKeyEvent.last_key_data[1] & 0x01)
+        self.key_2_down = (self.data[1] & 0x02) & ~ (SpaceballKeyEvent.last_key_data[1] & 0x02)
+        self.key_3_down = (self.data[1] & 0x04) & ~ (SpaceballKeyEvent.last_key_data[1] & 0x04)
+        self.key_4_down = (self.data[1] & 0x08) & ~ (SpaceballKeyEvent.last_key_data[1] & 0x08)
+        self.key_5_down = (self.data[0] & 0x01) & ~ (SpaceballKeyEvent.last_key_data[0] & 0x01)
+        self.key_6_down = (self.data[0] & 0x02) & ~ (SpaceballKeyEvent.last_key_data[0] & 0x02)
+        self.key_7_down = (self.data[0] & 0x04) & ~ (SpaceballKeyEvent.last_key_data[0] & 0x04)
+        self.key_8_down = (self.data[0] & 0x08) & ~ (SpaceballKeyEvent.last_key_data[0] & 0x08)
 
-        self.key_pick_up = ~ (self.data[0] & 0x10) & (SpaceBallKeyEvent.last_key_data[0] & 0x10)
-        self.key_1_up = ~ (self.data[1] & 0x01) & (SpaceBallKeyEvent.last_key_data[1] & 0x01)
-        self.key_2_up = ~ (self.data[1] & 0x02) & (SpaceBallKeyEvent.last_key_data[1] & 0x02)
-        self.key_3_up = ~ (self.data[1] & 0x04) & (SpaceBallKeyEvent.last_key_data[1] & 0x04)
-        self.key_4_up = ~ (self.data[1] & 0x08) & (SpaceBallKeyEvent.last_key_data[1] & 0x08)
-        self.key_5_up = ~ (self.data[0] & 0x01) & (SpaceBallKeyEvent.last_key_data[0] & 0x01)
-        self.key_6_up = ~ (self.data[0] & 0x02) & (SpaceBallKeyEvent.last_key_data[0] & 0x02)
-        self.key_7_up = ~ (self.data[0] & 0x04) & (SpaceBallKeyEvent.last_key_data[0] & 0x04)
-        self.key_8_up = ~ (self.data[0] & 0x08) & (SpaceBallKeyEvent.last_key_data[0] & 0x08)
+        self.key_pick_up = ~ (self.data[0] & 0x10) & (SpaceballKeyEvent.last_key_data[0] & 0x10)
+        self.key_1_up = ~ (self.data[1] & 0x01) & (SpaceballKeyEvent.last_key_data[1] & 0x01)
+        self.key_2_up = ~ (self.data[1] & 0x02) & (SpaceballKeyEvent.last_key_data[1] & 0x02)
+        self.key_3_up = ~ (self.data[1] & 0x04) & (SpaceballKeyEvent.last_key_data[1] & 0x04)
+        self.key_4_up = ~ (self.data[1] & 0x08) & (SpaceballKeyEvent.last_key_data[1] & 0x08)
+        self.key_5_up = ~ (self.data[0] & 0x01) & (SpaceballKeyEvent.last_key_data[0] & 0x01)
+        self.key_6_up = ~ (self.data[0] & 0x02) & (SpaceballKeyEvent.last_key_data[0] & 0x02)
+        self.key_7_up = ~ (self.data[0] & 0x04) & (SpaceballKeyEvent.last_key_data[0] & 0x04)
+        self.key_8_up = ~ (self.data[0] & 0x08) & (SpaceballKeyEvent.last_key_data[0] & 0x08)
 
     def __str__(self):
         msg = "K,"
@@ -131,7 +131,7 @@ class SpaceBallKeyEvent(SpaceBallEvent):
         elif self.key_8_down:
             handlers["key_8_down"](self)
 
-        SpaceBallKeyEvent.last_key_data = self.data
+        SpaceballKeyEvent.last_key_data = self.data
 
 
 def twos_comp(val, bits):
@@ -141,9 +141,9 @@ def twos_comp(val, bits):
     return val                         # return positive value as is
 
 
-class SpaceBallDataEvent (SpaceBallEvent):
+class SpaceballDataEvent (SpaceballEvent):
     def __init__(self, data):
-        SpaceBallEvent.__init__(self, 'D', data)
+        SpaceballEvent.__init__(self, 'D', data)
         self.period = (self.data[0] * 256 + self.data[1]) / 16.0
         self.Tx = twos_comp(self.data[ 2] * 256 + self.data[ 3], 16)
         self.Ty = twos_comp(self.data[ 4] * 256 + self.data[ 5], 16)
@@ -164,7 +164,7 @@ class SpaceBallDataEvent (SpaceBallEvent):
         handlers["data"](self)
 
 
-class SpaceBall:
+class Spaceball:
 
     def __init__(self, tty):
         self.tty = tty
@@ -224,7 +224,7 @@ class SpaceBall:
         while ord(c) != 13:
             data.append(ord(c))
             c = self.ser.read()
-        result = SpaceBallEvent.create(type, data)
+        result = SpaceballEvent.create(type, data)
         return result
 
     def update(self):
