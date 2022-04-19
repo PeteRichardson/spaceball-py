@@ -3,12 +3,14 @@ import sys
 import subprocess 
 
 class Line(object):
+    ''' An object that can scale the ball x value
+        to the width of the screen.
+    '''
     def __init__(self, width=80):
         self.width = width
         self.x = width/2
         self.scale = 12
         self.maxmove = self.width/15
-
 
     def update(self, move):
         if move != 0:
@@ -23,20 +25,25 @@ class Line(object):
                 self.x = 0
 
     def __str__(self):
-        return " "*int(self.x) + "*"
-
-ball = SpaceBall()
-
-@ball.handler_for('data')
-def dump_event(event):
-    line.update(event.Tx)
+        '''Print some spaces and then a character.'''
+        return " "*int(self.x) + "🏄‍♂️"
 
 
-rows, columns = subprocess.check_output(['stty', 'size']).decode().split()
-line = Line(width=int(columns)-1)
+if __name__ == "__main__":
+    # Get the screen size and instantiate the Line
+    rows, columns = subprocess.check_output(['stty', 'size']).decode().split()
+    line = Line(width=int(columns)-1)
 
-while True:
-    ball.update()
-    print (line)
+    ball = SpaceBall(tty='/dev/tty.usbserial-AJ03ACPV')
+
+    # Register a handler to update the Line whenever displacement data comes in.
+    @ball.handler_for('data')
+    def dump_event(event):
+        line.update(event.Tx)
+
+    # print the Line after each update
+    while True:
+        ball.update()
+        print (line)
 
 

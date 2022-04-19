@@ -1,6 +1,23 @@
+''' Python3 classes for interacting with a
+    Silicon Graphics model 1003 Spaceball
+    
+    The ball sends keystroke and ball displacement data
+    over serial.   See the accompanying sbprotocol.txt document.
+
+    With this module you can register functions to get run
+    when events occur.   Each key has a down and an up
+    event, and there is an event for new displacement data.
+
+    See test_spaceball.py for an example of registering handlers.
+    '''
+
 import serial
 
 class SpaceBallEvent:
+    ''' Base class for any events the Spaceball can send.
+        Made up of a data type and some bytes of data.
+        Subclasses include key events and data (i.e. ball movement) events
+        '''
     def __init__(self, type, data):
         self.type = type
         self.data = data
@@ -28,6 +45,7 @@ class SpaceBallEvent:
     def run(self, handlers):
         pass
 
+
 class SpaceBallKeyEvent(SpaceBallEvent):
     last_key_data = [0x40, 0x40]
 
@@ -54,8 +72,6 @@ class SpaceBallKeyEvent(SpaceBallEvent):
         self.key_7_up = ~ (self.data[0] & 0x04) & (SpaceBallKeyEvent.last_key_data[0] & 0x04)
         self.key_8_up = ~ (self.data[0] & 0x08) & (SpaceBallKeyEvent.last_key_data[0] & 0x08)
 
-    # def __str__(self):
-    #    return SpaceBallEvent.__str__(self)
     def __str__(self):
         msg = "K,"
         msg += "P" if self.key_pick_down else "_"
@@ -68,7 +84,6 @@ class SpaceBallKeyEvent(SpaceBallEvent):
         msg += "7" if self.key_7_down else "_"
         msg += "8" if self.key_8_down else "_"
         return msg
-
 
     def run(self, handlers):
         if self.key_pick_up:
@@ -118,6 +133,7 @@ class SpaceBallKeyEvent(SpaceBallEvent):
 
         SpaceBallKeyEvent.last_key_data = self.data
 
+
 def twos_comp(val, bits):
     """compute the 2's compliment of int value val"""
     if (val & (1 << (bits - 1))) != 0: # if sign bit is set e.g., 8bit: 128-255
@@ -140,8 +156,8 @@ class SpaceBallDataEvent (SpaceBallEvent):
     def __str__(self):
         msg = "D,"
         msg += "{:6.3f},".format(self.period)
-        msg += "{:d},{:d},{:d},".format(self.Tx, self.Ty, self.Tz)
-        msg += "{:d},{:d},{:d}".format(self.Rx, self.Ry, self.Rz)
+        msg += " T({:6d},{:6d},{:6d})".format(self.Tx, self.Ty, self.Tz)
+        msg += " R({:6d},{:6d},{:6d})".format(self.Rx, self.Ry, self.Rz)
         return msg
 
     def run(self, handlers):
@@ -150,7 +166,7 @@ class SpaceBallDataEvent (SpaceBallEvent):
 
 class SpaceBall:
 
-    def __init__(self, tty='/dev/tty.usbserial-AJ03ACPV'):
+    def __init__(self, tty):
         self.tty = tty
         self.ser = serial.Serial(timeout=None)
         self.ser.baudrate = 9600
